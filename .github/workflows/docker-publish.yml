@@ -3,7 +3,7 @@ name: Docker Build & Push
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   build-and-push:
@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-      
+
         uses: actions/checkout@v3
 
       - name: Log in to Docker Hub
