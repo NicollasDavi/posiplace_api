@@ -4,6 +4,7 @@ exports.getItens = async (req, res) => {
   const itens = await prisma.fornecedorItem.findMany({
     include: { fornecedor: true, avaliacoes: true },
   });
+  
   res.json(itens);
 };
 
