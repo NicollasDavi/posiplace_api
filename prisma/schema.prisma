@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =======================
+// TABELA FORNECEDOR
+// =======================
+model Fornecedor {
+  id                  Int      @id @default(autoincrement())
+  tipoCadastro        String   // "C" = CNPJ, "N" = outro tipo
+  razaoSocial         String
+  cnpj                String   @unique
+  instituicaoEstadual String?
+  nomeFantasia        String?
+  email               String?
+  telefone            String?
+  tipoPagamento       String?
+  ehMEI               Boolean  @default(false)
+  banco               String?
+  agencia             String?
+  conta               String?
+  digitoConta         String?
+  comprovanteBancario String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  itens       FornecedorItem[]
+  avaliacoes  Avaliacao[]
+  solicitacoes Solicitacao[]
+}
+
+// =======================
+// ITENS OU SERVIÇOS DO FORNECEDOR
+// =======================
+model FornecedorItem {
+  id           Int       @id @default(autoincrement())
+  fornecedorId Int
+  nome         String
+  descricao    String?
+  tipo         String    // "produto" ou "servico"
+  preco        Float
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  fornecedor   Fornecedor @relation(fields: [fornecedorId], references: [id])
+  avaliacoes   Avaliacao[]
+  solicitacoes Solicitacao[]
+}
+
+// =======================
+// AVALIACOES DE FORNECEDOR OU ITEM
+// =======================
+model Avaliacao {
+  id               Int       @id @default(autoincrement())
+  fornecedorId     Int?
+  fornecedorItemId Int?
+  usuarioId        Int
+  nota             Int
+  comentario       String?
+  createdAt        DateTime  @default(now())
+
+  fornecedor   Fornecedor?     @relation(fields: [fornecedorId], references: [id])
+  item         FornecedorItem? @relation(fields: [fornecedorItemId], references: [id])
+  usuario      Usuario         @relation(fields: [usuarioId], references: [id])
+}
+
+// =======================
+// TABELA INSTITUIÇÃO
+// =======================
+model Instituicao {
+  id         Int       @id @default(autoincrement())
+  nome       String
+  cnpj       String    @unique
+  email      String?
+  telefone   String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  unidades   Unidade[]
+}
+
+// =======================
+// TABELA UNIDADE
+// =======================
+model Unidade {
+  id        Int       @id @default(autoincrement())
+  nome      String
+  instituicaoId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  instituicao Instituicao @relation(fields: [instituicaoId], references: [id])
+  setores     Setor[]
+  solicitacoes Solicitacao[]
+}
+
+// =======================
+// TABELA SETOR
+// =======================
+model Setor {
+  id         Int       @id @default(autoincrement())
+  nome       String
+  verba      Float     @default(0)
+  unidadeId  Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+
+  unidade   Unidade    @relation(fields: [unidadeId], references: [id])
+  usuarios  Usuario[]
+  solicitacoes Solicitacao[]
+}
+
+// =======================
+// TABELA USUARIO
+// =======================
+model Usuario {
+  id         Int       @id @default(autoincrement())
+  nome       String
+  email      String    @unique
+  senha      String
+  cargo      String?
+  setorId    Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+
+  setor       Setor       @relation(fields: [setorId], references: [id])
+  solicitacoes Solicitacao[]
+  avaliacoes  Avaliacao[]
+}
+
+// =======================
+// TABELA SOLICITAÇÃO
+// =======================
+model Solicitacao {
+  id              Int       @id @default(autoincrement())
+  usuarioId       Int
+  setorId         Int
+  unidadeId       Int
+  fornecedorId    Int?
+  fornecedorItemId Int?
+  descricao       String
+  valorTotal      Float
+  dataSolicitacao DateTime  @default(now())
+  motivo          String?
+  aprovada        Boolean   @default(false)
+  situacao        String    @default("pendente") // pendente, aprovada, rejeitada
+  paga            Boolean   @default(false)
+  percentualVerba Float?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now())
+
+  usuario      Usuario       @relation(fields: [usuarioId], references: [id])
+  setor        Setor         @relation(fields: [setorId], references: [id])
+  unidade      Unidade       @relation(fields: [unidadeId], references: [id])
+  fornecedor   Fornecedor?   @relation(fields: [fornecedorId], references: [id])
+  item         FornecedorItem? @relation(fields: [fornecedorItemId], references: [id])
+}
